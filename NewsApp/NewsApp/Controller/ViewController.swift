@@ -10,7 +10,9 @@ import UIKit
 
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
-    var article = [Articles]()
+    var responseModel: Base?
+    var sources = [Source]()
+    
     
     @IBOutlet weak var tableView: UITableView!
     override func viewDidLoad() {
@@ -22,16 +24,19 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return article.count;
+        
+        return responseModel?.articles?.count ?? 0
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell: TableViewCell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! TableViewCell
         
-        cell.imageLbl.text = article[indexPath.row].author;
+        cell.imageLbl.text = "\(self.responseModel?.articles?[indexPath.row].author ?? "Not Found")"
+        cell.titleText.text = "\(self.responseModel?.articles?[indexPath.row].title ?? "Not Found")"
+        cell.descriptionText.text = "\(self.responseModel?.articles?[indexPath.row].description ?? "Not Found")"
+        cell.nameLbl.text = sources[indexPath.row].name;
         
-        let imageURL = "\(article[indexPath.row].urlToImage ?? "")"
-        
+        let imageURL = "\(self.responseModel?.articles?[indexPath.row].urlToImage ?? "")"
         ImageService.getImage(url: URL(string: imageURL)!) { image in
             cell.newsImage.image = image
         }
@@ -49,7 +54,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         URLSession.shared.dataTask(with: url) { (data, response, error) in
             if let data = data, error == nil {
                 do {
-                    self.article = try JSONDecoder().decode([Articles].self, from: data)
+                    let response = try JSONDecoder().decode(Base.self, from: data)
+                    
+                    print(response.articles ?? "an error")
                 }
                 catch {
                     print(error.localizedDescription)
@@ -60,7 +67,6 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             }
         }.resume()
     }
-
 
 }
 
